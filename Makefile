@@ -5,12 +5,24 @@ setup:
 	composer install
 	cp -n .env.example .env|| true
 	php artisan key:gen --ansi
+	touch database/database.sqlite
+	php artisan migrate
+	php artisan db:seed
+
+migrate:
+	php artisan migrate
+
+console:
+	php artisan tinker
+
+log:
+	tail -f storage/logs/laravel.log
 
 test:
 	php artisan test
 
-lint:
-	composer phpcs
-
 deploy:
 	git push heroku
+
+lint:
+	composer phpcs

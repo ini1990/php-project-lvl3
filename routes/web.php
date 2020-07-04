@@ -26,7 +26,7 @@ Route::get('/domains', function () {
 
 Route::post('/domains', function (Request $request) {
     $data = $request->validate(['name' => ['required', 'unique:domains', 'url']]);
-    $name = parse_url($data['name'], PHP_URL_SCHEME) . parse_url($data['name'], PHP_URL_HOST);
+    $name = parse_url($data['name'], PHP_URL_SCHEME) . "://" . parse_url($data['name'], PHP_URL_HOST);
     $id = DB::table('domains')->insertGetId(['name' => $name, 'created_at' => Carbon::now()->toDateTimeString()]);
     flash('Message');
     return redirect()->route('domains.show', $id);
