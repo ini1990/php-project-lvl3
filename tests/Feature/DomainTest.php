@@ -10,6 +10,7 @@ class DomainTest extends TestCase
 {
     use RefreshDatabase;
     use WithFaker;
+    
     /**
      * A basic feature test example.
      *
