@@ -32,6 +32,23 @@ class DomainTest extends TestCase
         $this->assertDatabaseHas('domains', ['name' => parse_url($domain, PHP_URL_SCHEME) . "://" . parse_url($domain, PHP_URL_HOST)]);
     }
 
+    public function testChecksStore()
+    {
+        $domain = $this->faker->url;
+        $url = parse_url($domain, PHP_URL_SCHEME) . "://" . parse_url($domain, PHP_URL_HOST);
+        $id = \DB::table('domains')->insertGetId([
+            'name' => $url,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $response = $this->post(route('domains.checks.store', $id));
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+        $response->assertRedirect();
+        $this->assertDatabaseHas('domain_checks', ['domain_id' => $id]);
+    }
+
+
     public function testShow()
     {
         $domain = $this->faker->url;

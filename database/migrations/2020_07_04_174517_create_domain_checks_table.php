@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
-class CreateDomainsTable extends Migration
+class CreateDomainChecksTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,9 +14,13 @@ class CreateDomainsTable extends Migration
      */
     public function up()
     {
-        Schema::create('domains', function (Blueprint $table) {
+        Schema::create('domain_checks', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->foreignId('domain_id')->constrained();
+            $table->integer('status_code')->nullable();
+            $table->string('h1')->nullable();
+            $table->string('keywords')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +32,6 @@ class CreateDomainsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('domains');
+        Schema::dropIfExists('domain_checks');
     }
 }

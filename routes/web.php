@@ -20,19 +20,46 @@ Route::get('/', function () {
 })->name('domains.create');
 
 Route::get('/domains', function () {
-    $domains = DB::table('domains')->paginate(10);
+    $latestCkecks = DB::table('domain_checks')
+    ->select('domain_id', DB::raw('MAX(created_at) as last_domain_check_at'))
+    ->groupBy('domain_id');
+    $domains = DB::table('domains')
+    ->leftJoinSub($latestCkecks, 'latest_checks', function ($join) {
+        $join->on('domains.id', '=', 'latest_checks.domain_id');
+    })->get();
     return view('domain.index', ['domains' => $domains]);
 })->name('domains.index');
 
 Route::post('/domains', function (Request $request) {
-    $data = $request->validate(['name' => ['required', 'unique:domains', 'url']]);
-    $name = parse_url($data['name'], PHP_URL_SCHEME) . "://" . parse_url($data['name'], PHP_URL_HOST);
-    $id = DB::table('domains')->insertGetId(['name' => $name, 'created_at' => Carbon::now()->toDateTimeString()]);
-    flash('Message');
-    return redirect()->route('domains.show', $id);
+    $validator = Validator::make($request->all(), ['name' => 'required|url']);
+    if ($validator->fails()) {
+        flash('Not a valid url')->error();
+        return redirect()->route('domains.create');
+    }
+    $name = parse_url($request->name, PHP_URL_SCHEME) . "://" . parse_url($request->name, PHP_URL_HOST);
+    $domain = DB::table('domains')->where('name', $name)->first();
+    if ($domain) {
+        flash('Url already exists');
+        return redirect()->route('domains.show', $domain->id);
+    } else {
+        $id = DB::table('domains')->insertGetId(['name' => $name, 'created_at' => Carbon::now()->toDateTimeString()]);
+        flash('Url has been added')->success();
+        return redirect()->route('domains.show', $id);
+    }
 })->name('domains.store');
 
 Route::get('/domains/{id}', function ($id) {
     $domain = DB::table('domains')->find($id);
-    return view('domain.show', ['domain' => $domain]);
+    $domainChecks = DB::table('domain_checks')->where('domain_id', $id)->get();
+    return view('domain.show', compact('domain', 'domainChecks'));
 })->name('domains.show');
+
+Route::post('/domains/{id}/checks', function ($id) {
+    $domainChecks = [
+        'domain_id' => $id,
+        'created_at' => Carbon::now(),
+        'updated_at' => Carbon::now()
+    ];
+    $domain = DB::table('domain_checks')->insert($domainChecks);
+    return redirect()->route('domains.show', $id);
+})->name('domains.checks.store');
