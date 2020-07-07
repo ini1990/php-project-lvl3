@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use DiDom\Document;
+use DiDom\Query;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,11 +71,12 @@ Route::post('/domains/{id}/checks', function ($id) {
         return redirect()->route('domains.show', $id);
     }
     $document = new Document($response->body());
+    $h1 = $document->xpath('//h1', Query::TYPE_XPATH)[0]->first('h1')->text() ?? null;
     $domainChecks = [
         'domain_id' => $id,
         'keywords' => $document->first('meta[name=keywords]')->content ?? null,
         'description' => $document->first('meta[name=description]')->content ?? null,
-        'h1' => $document->first('h1') ? $document->first('h1')->text() : null,
+        'h1' => substr($h1, 20) . "...",
         'status_code' => $response->status(),
         'created_at' => Carbon::now(),
         'updated_at' => Carbon::now()
