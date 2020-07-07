@@ -72,11 +72,14 @@ Route::post('/domains/{id}/checks', function ($id) {
     }
     $document = new Document($response->body());
     $h1 = $document->xpath('//h1', Query::TYPE_XPATH)[0]->first('h1')->text() ?? null;
+    if (strlen($h1) > 20) {
+        $h1 = substr($h1, 0, 20) . '...';
+    }
     $domainChecks = [
         'domain_id' => $id,
         'keywords' => $document->first('meta[name=keywords]')->content ?? null,
         'description' => $document->first('meta[name=description]')->content ?? null,
-        'h1' => substr($h1, 20) . "...",
+        'h1' => $h1,
         'status_code' => $response->status(),
         'created_at' => Carbon::now(),
         'updated_at' => Carbon::now()
