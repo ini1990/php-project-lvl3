@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section("content")
+@include('flash::message')
 <div class="container-lg">
         <h1 class="mt-5 mb-3">Site: {{ $domain->name }}</h1>
         <div class="table-responsive">
@@ -33,10 +34,10 @@
             <tbody>
                 @foreach ($domainChecks as $check)
                   <tr>
-                    <th>{{ $check->id }}</th>
+                    <td>{{ $check->id }}</td>
+                    <td>{{ Illuminate\Support\Str::of($check->h1)->limit(30) }}</td>
                     <td>{{ $check->status_code }}</td>
                     <td>{{ $check->created_at }}</td>
-                    <td>{{ $check->h1 }}</td>
                     <td>{{ Illuminate\Support\Str::of($check->keywords)->limit(30) }}</td>
                     <td>{{ Illuminate\Support\Str::of($check->description)->limit(30) }}</td>
                   </tr>

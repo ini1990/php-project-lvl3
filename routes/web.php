@@ -18,17 +18,15 @@ use DiDom\Document;
 */
 
 Route::get('/', function () {
-    return view('domain.create');
-})->name('domains.create');
+    return view('welcome');
+})->name('index');
 
 Route::get('/domains', function () {
-    $latestCkecks = DB::table('domain_checks')
-    ->select('domain_id', DB::raw('MAX(created_at) as last_domain_check_at'))
-    ->groupBy('domain_id');
     $domains = DB::table('domains')
-    ->leftJoinSub($latestCkecks, 'latest_checks', function ($join) {
-        $join->on('domains.id', '=', 'latest_checks.domain_id');
-    })->get();
+    ->select('domains.id', 'domains.name', 'domain_checks.status_code', DB::raw('MAX(domain_checks.updated_at) as last_check'))
+    ->leftJoin('domain_checks', 'domains.id', '=', 'domain_checks.domain_id')
+    ->groupBy('domains.id', 'domain_checks.status_code')->get();
+
     return view('domain.index', ['domains' => $domains]);
 })->name('domains.index');
 
@@ -36,19 +34,19 @@ Route::post('/domains', function (Request $request) {
     $validator = Validator::make($request->all(), ['name' => 'required|url']);
     if ($validator->fails()) {
         flash('Not a valid url')->error();
-        return redirect()->route('domains.create');
+        return redirect()->route('index');
     }
-    $filteredDataFromUrl = array_slice(parse_url($request->name), 0, 2);
-    $normalizedUrl = implode("://", $filteredDataFromUrl);
+    $sheme = parse_url($request->name, PHP_URL_SCHEME);
+    $host = parse_url($request->name, PHP_URL_HOST);
     $domain = DB::table('domains')->where('name', $request->name)->first();
     if ($domain) {
         flash('Url already exists');
         return redirect()->route('domains.show', $domain->id);
     } else {
         $id = DB::table('domains')->insertGetId([
-            'name' => $normalizedUrl,
+            'name' => join("://", [$sheme, $host]),
             'created_at' => Carbon::now(),
-            'created_at' => Carbon::now()
+            'updated_at' => Carbon::now()
         ]);
         flash('Url has been added');
         return redirect()->route('domains.show', $id);
@@ -57,6 +55,9 @@ Route::post('/domains', function (Request $request) {
 
 Route::get('/domains/{id}', function ($id) {
     $domain = DB::table('domains')->find($id);
+    if (!$domain) {
+        abort(404);
+    }
     $domainChecks = DB::table('domain_checks')->where('domain_id', $id)->get();
     return view('domain.show', compact('domain', 'domainChecks'));
 })->name('domains.show');

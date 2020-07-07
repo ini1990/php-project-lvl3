@@ -4,8 +4,9 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
 use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
+use Carbon\Carbon;
 
 class DomainTest extends TestCase
 {
@@ -18,11 +19,6 @@ class DomainTest extends TestCase
      *
      * @return void
      */
-    public function testCreate()
-    {
-        $response = $this->get(route('domains.create'));
-        $response->assertStatus(200);
-    }
 
     public function testStore()
     {
@@ -31,41 +27,40 @@ class DomainTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertStatus(302);
         $response->assertRedirect();
-        $this->assertDatabaseHas('domains', ['name' => parse_url($domain, PHP_URL_SCHEME) . "://" . parse_url($domain, PHP_URL_HOST)]);
+        $sheme = parse_url($domain, PHP_URL_SCHEME);
+        $host = parse_url($domain, PHP_URL_HOST);
+        $this->assertDatabaseHas('domains', ['name' => join("://", [$sheme, $host])]);
     }
 
     public function testChecksStore()
     {
-        $data = '<html><head>
-        <meta name="keywords" content="test keywords" />
-        <meta name="description" content="test description" />
-        </head><body><h1>H1 tag test</h1></body></html>';
-        $domain = $this->faker->url;
-        $url = parse_url($domain, PHP_URL_SCHEME) . "://" . parse_url($domain, PHP_URL_HOST);
+        $html = file_get_contents(__DIR__ . "/../fixtures/test.html");
+        $url = "http://example.test";
         $id = \DB::table('domains')->insertGetId([
             'name' => $url,
-            'created_at' => now(),
-            'updated_at' => now()
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now()
         ]);
         Http::fake([
-            $url => Http::response($data, 203)
+            $url => Http::response($html)
         ]);
         $response = $this->post(route('domains.checks.store', $id));
         $response->assertSessionHasNoErrors();
         $response->assertRedirect();
         $this->assertDatabaseHas('domain_checks', ["keywords" => "test keywords",
-        'h1' => 'H1 tag test', 'description' => 'test description']);
+        'h1' => 'test h1', 'description' => 'test description']);
     }
 
 
     public function testShow()
     {
         $domain = $this->faker->url;
-        $url = parse_url($domain, PHP_URL_SCHEME) . "://" . parse_url($domain, PHP_URL_HOST);
+        $sheme = parse_url($domain, PHP_URL_SCHEME);
+        $host = parse_url($domain, PHP_URL_HOST);
         $id = \DB::table('domains')->insertGetId([
-            'name' => $url,
-            'created_at' => now(),
-            'updated_at' => now()
+            'name' => join("://", [$sheme, $host]),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now()
         ]);
         $response = $this->get(route('domains.show', $id));
         $response->assertOk();

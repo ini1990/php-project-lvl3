@@ -15,27 +15,27 @@
         <title>Laravel</title>
 
         <!-- Scripts -->
-        <script src="{{ secure_asset('js/app.js') }}"></script>
+        <script src="{{ asset('js/app.js') }}"></script>
 
         <!-- Fonts -->
         <link rel="dns-prefetch" href="//fonts.gstatic.com">
         <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
 
         <!-- Styles -->
-        <link href="{{ secure_asset('css/app.css') }}" rel="stylesheet">
+        <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
     </head>
     <body class="d-flex flex-column">
         <header>
             <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-                <a class="navbar-brand" href="/">Analyzer</a>
+                <a class="navbar-brand" href="{{ route('index')}}">Analyzer</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link active" href="{{ route('domains.create')}}">Home</a>
+                            <a class="nav-link active" href="{{ route('index')}}">Home</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link " href="{{ route('domains.index')}}">Domains</a>
@@ -46,8 +46,6 @@
         </header>
 
         <main class="flex-grow-1">
-
-@include('flash::message')
                     @yield('content')
         </main>
 
