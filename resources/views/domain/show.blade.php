@@ -19,7 +19,7 @@
                     </tr>
                                     <tr>
                         <td>updated_at</td>
-                        <td>{{ $domain->created_at }}</td>
+                        <td>{{ $domain->updated_at }}</td>
                     </tr>
                             </tbody></table>
         </div>
@@ -36,6 +36,9 @@
                     <th>{{ $check->id }}</th>
                     <td>{{ $check->status_code }}</td>
                     <td>{{ $check->created_at }}</td>
+                    <td>{{ $check->h1 }}</td>
+                    <td>{{ Illuminate\Support\Str::of($check->keywords)->limit(30) }}</td>
+                    <td>{{ Illuminate\Support\Str::of($check->description)->limit(30) }}</td>
                   </tr>
                 @endforeach
               </tbody>
