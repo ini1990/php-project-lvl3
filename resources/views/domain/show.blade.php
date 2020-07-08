@@ -7,19 +7,19 @@
         <div class="table-responsive">
             <table class="table table-bordered table-hover text-nowrap">
                                     <tbody><tr>
-                        <td>id</td>
+                        <th>id</th>
                         <td>{{ $domain->id }}</td>
                     </tr>
                                     <tr>
-                        <td>name</td>
+                        <th>name</th>
                         <td>{{ $domain->name }}</td>
                     </tr>
                                     <tr>
-                        <td>created_at</td>
+                        <th>created_at</th>
                         <td>{{ $domain->created_at }}</td>
                     </tr>
                                     <tr>
-                        <td>updated_at</td>
+                        <th>updated_at</th>
                         <td>{{ $domain->updated_at }}</td>
                     </tr>
                             </tbody></table>
@@ -33,6 +33,16 @@
             <table class="table table-bordered table-hover text-nowrap">
             <tbody>
                 @foreach ($domainChecks as $check)
+                    @if ($loop->first)
+                        <tr>
+                          <th> ID </th>
+                          <th> Header 1 </th>
+                          <th>Status Code</th>
+                          <th>Created At</th>
+                          <th>Keywords</th>
+                          <th>Description</th>
+                        </tr>
+                    @endif
                   <tr>
                     <td>{{ $check->id }}</td>
                     <td>{{ $check->h1 }}</td>
