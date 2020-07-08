@@ -2,10 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use DiDom\Document;
 use DiDom\Query;
+use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,11 +25,11 @@ Route::get('/', function () {
 
 Route::get('/domains', function () {
     $domains = DB::table('domains')
-    ->select('domains.id', 'domains.name', 'domain_checks.status_code', DB::raw('MAX(domain_checks.updated_at) as last_check'))
+    ->select('domains.id', 'domains.name', 'domains.created_at', 'domain_checks.status_code', DB::raw('MAX(domain_checks.updated_at) as last_check'))
     ->leftJoin('domain_checks', 'domains.id', '=', 'domain_checks.domain_id')
     ->groupBy('domains.id', 'domain_checks.status_code')->get();
 
-    return view('domain.index', ['domains' => $domains]);
+    return view('domain.index', compact('domains'));
 })->name('domains.index');
 
 Route::post('/domains', function (Request $request) {
@@ -46,8 +47,8 @@ Route::post('/domains', function (Request $request) {
     } else {
         $id = DB::table('domains')->insertGetId([
             'name' => join("://", [$sheme, $host]),
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now()
+            'created_at' => now(),
+            'updated_at' => now()
         ]);
         flash('Url has been added');
         return redirect()->route('domains.show', $id);
@@ -56,10 +57,13 @@ Route::post('/domains', function (Request $request) {
 
 Route::get('/domains/{id}', function ($id) {
     $domain = DB::table('domains')->find($id);
-    if (!$domain) {
-        abort(404);
-    }
+    abort_unless($domain, 404);
     $domainChecks = DB::table('domain_checks')->where('domain_id', $id)->get();
+    foreach ($domainChecks as $check) {
+        $check->h1 = Str::limit($check->h1, 25);
+        $check->description = Str::limit($check->description, 25);
+        $check->keywords = Str::limit($check->keywords, 25);
+    }
     return view('domain.show', compact('domain', 'domainChecks'));
 })->name('domains.show');
 
@@ -71,18 +75,14 @@ Route::post('/domains/{id}/checks', function ($id) {
         return redirect()->route('domains.show', $id);
     }
     $document = new Document($response->body());
-    $h1 = $document->xpath('//h1', Query::TYPE_XPATH)[0]->first('h1')->text() ?? null;
-    if (strlen($h1) > 20) {
-        $h1 = substr($h1, 0, 20) . '...';
-    }
     $domainChecks = [
         'domain_id' => $id,
-        'keywords' => $document->first('meta[name=keywords]')->content ?? null,
-        'description' => $document->first('meta[name=description]')->content ?? null,
-        'h1' => $h1,
+        'keywords' => optional($document->first('meta[name=keywords]'))->content,
+        'description' => optional($document->first('meta[name=description]'))->content,
+        'h1' => optional($document->first('h1'))->text(),
         'status_code' => $response->status(),
-        'created_at' => Carbon::now(),
-        'updated_at' => Carbon::now()
+        'created_at' => now(),
+        'updated_at' => now()
     ];
     $domain = DB::table('domain_checks')->insert($domainChecks);
     flash("Website has been checked!")->success();

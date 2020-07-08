@@ -18,7 +18,7 @@ class CreateDomainChecksTable extends Migration
             $table->id();
             $table->foreignId('domain_id')->constrained();
             $table->integer('status_code')->nullable();
-            $table->string('h1')->nullable();
+            $table->text('h1')->nullable();
             $table->text('keywords')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();

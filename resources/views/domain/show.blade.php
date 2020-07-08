@@ -35,11 +35,11 @@
                 @foreach ($domainChecks as $check)
                   <tr>
                     <td>{{ $check->id }}</td>
-                    <td>{{ Illuminate\Support\Str::of($check->h1)->limit(30) }}</td>
+                    <td>{{ $check->h1 }}</td>
                     <td>{{ $check->status_code }}</td>
                     <td>{{ $check->created_at }}</td>
-                    <td>{{ Illuminate\Support\Str::of($check->keywords)->limit(30) }}</td>
-                    <td>{{ Illuminate\Support\Str::of($check->description)->limit(30) }}</td>
+                    <td>{{ $check->keywords }}</td>
+                    <td>{{ $check->description  }}</td>
                   </tr>
                 @endforeach
               </tbody>
