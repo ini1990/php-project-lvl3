@@ -10,6 +10,7 @@
       <th>ID</th>
       <th>Name</th>
       <th>Created</th>
+      <th>Last Check</th>
       <th>Status Code</th>
     </tr>
   </thead>
@@ -19,6 +20,7 @@
         <th> {{ $domain->id }} </th>
         <td><a href="{{ route('domains.show', $domain->id)}}">{{ $domain->name }}</a></td>
         <td>{{ $domain->created_at }}</td>
+        <td>{{ $domain->updated_at }}</td>
         <td>{{ $domain->status_code }}</td>
       </tr>
     @endforeach
