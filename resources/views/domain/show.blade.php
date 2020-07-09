@@ -6,14 +6,7 @@
         <h1 class="mt-5 mb-3">Site: {{ $domain->name }}</h1>
         <div class="table-responsive">
             <table class="table table-bordered table-hover text-nowrap">
-                                    <tbody><tr>
-                        <th>id</th>
-                        <td>{{ $domain->id }}</td>
-                    </tr>
-                                    <tr>
-                        <th>name</th>
-                        <td>{{ $domain->name }}</td>
-                    </tr>
+                                    <tbody>
                                     <tr>
                         <th>created_at</th>
                         <td>{{ $domain->created_at }}</td>

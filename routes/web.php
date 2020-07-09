@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use DiDom\Document;
-use DiDom\Query;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 
@@ -24,10 +23,11 @@ Route::get('/', function () {
 })->name('index');
 
 Route::get('/domains', function () {
-    $domains = DB::table('domains')
-    ->select('domains.id', 'domains.name', 'domains.created_at', 'domain_checks.status_code', DB::raw('MAX(domain_checks.updated_at) as last_check'))
-    ->leftJoin('domain_checks', 'domains.id', '=', 'domain_checks.domain_id')
-    ->groupBy('domains.id', 'domain_checks.status_code')->get();
+    $domains = DB::table('domains')->select('domains.*', 'domain_checks.status_code')
+        ->leftJoin('domain_checks', function ($join) {
+            $join->on('domains.id', '=', 'domain_checks.domain_id')
+                 ->whereRaw('domains.updated_at = domain_checks.created_at');
+        })->orderBy('id')->get();
 
     return view('domain.index', compact('domains'));
 })->name('domains.index');
@@ -79,12 +79,26 @@ Route::post('/domains/{id}/checks', function ($id) {
         'domain_id' => $id,
         'keywords' => optional($document->first('meta[name=keywords]'))->content,
         'description' => optional($document->first('meta[name=description]'))->content,
-        'h1' => optional($document->first('h1'))->text(),
+        'h1' => optional($document->find('body')[0]->first('h1'))->text(),
         'status_code' => $response->status(),
         'created_at' => now(),
         'updated_at' => now()
     ];
-    $domain = DB::table('domain_checks')->insert($domainChecks);
-    flash("Website has been checked!")->success();
+
+    $validator = Validator::make($domainChecks, [
+        'keywords' => 'sometimes|nullable|string',
+        'description' => 'sometimes|nullable|string',
+        'h1' => 'sometimes|nullable|string|max:255'
+        ]);
+
+    $failedFields = array_keys($validator->errors()->messages());
+
+    $filtered = Arr::except($domainChecks, $failedFields);
+    foreach ($failedFields as $value) {
+        flash("Something wrong whith $value")->warning();
+    }
+    DB::table('domain_checks')->insert($filtered);
+    DB::table('domains')->where('id', $id)->update(['updated_at' => $domainChecks['created_at']]);
+    flash(" Website has been checked!")->success();
     return redirect()->route('domains.show', $id);
 })->name('domains.checks.store');
