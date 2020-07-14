@@ -23,18 +23,14 @@ Route::get('/', function () {
 })->name('index');
 
 Route::get('/domains', function () {
-    $latestCkecks = DB::table('domain_checks')
-    ->distinct('domain_id')
-    ->select('status_code', 'domain_id')
-    ->orderBy('domain_id')
-    ->orderBy('created_at', 'desc');
-
-    $domains = DB::table('domains')
-        ->leftJoinSub($latestCkecks, 'latest_ckecks', function ($join) {
-            $join->on('domains.id', '=', 'latest_ckecks.domain_id');
-        })->get();
-
-    return view('domain.index', compact('domains'));
+    $domains = DB::table('domains')->orderBy("id")->get();
+    $lastChecks = DB::table('domain_checks')
+        ->distinct("domain_id")
+        ->orderBy("domain_id")
+        ->orderBy("created_at", "desc")
+        ->whereIn('domain_id', $domains->pluck('id'))
+        ->get()->keyBy('domain_id');
+    return view('domain.index', compact('domains', 'lastChecks'));
 })->name('domains.index');
 
 Route::post('/domains', function (Request $request) {
@@ -68,8 +64,8 @@ Route::get('/domains/{id}', function ($id) {
 })->name('domains.show');
 
 Route::post('/domains/{id}/checks', function ($id) {
+    $domain = DB::table('domains')->find($id);
     try {
-        $domain = DB::table('domains')->find($id);
         $response = Http::get($domain->name);
     } catch (\Exception $e) {
         flash($e->getMessage())->error();
@@ -92,5 +88,6 @@ Route::post('/domains/{id}/checks', function ($id) {
     DB::table('domain_checks')->insert($domainChecks);
     DB::table('domains')->where('id', $id)->update(['updated_at' => $domainChecks['created_at']]);
     flash("Website has been checked!")->success();
+    
     return redirect()->route('domains.show', $id);
 })->name('domains.checks.store');

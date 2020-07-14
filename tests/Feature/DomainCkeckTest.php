@@ -10,8 +10,14 @@ use Tests\TestCase;
 class DomainCkeckTest extends TestCase
 {
     use RefreshDatabase;
-
-    public function testChecksStore()
+    
+    /**
+     * A basic feature test example.
+     *
+     * @return void
+     */
+    
+    public function testStore()
     {
         $html = file_get_contents(__DIR__ . "/../fixtures/test.html");
         $url = "http://example.test";

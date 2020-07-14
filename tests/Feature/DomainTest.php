@@ -6,13 +6,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
-use Carbon\Carbon;
 
 class DomainTest extends TestCase
 {
     use RefreshDatabase;
     use WithFaker;
-
 
     /**
      * A basic feature test example.
@@ -27,12 +25,20 @@ class DomainTest extends TestCase
         $domain = $this->faker->url;
         $sheme = parse_url($domain, PHP_URL_SCHEME);
         $host = parse_url($domain, PHP_URL_HOST);
+        $this->host = $host;
         $this->id = \DB::table('domains')->insertGetId([
             'name' => join("://", [$sheme, $host]),
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        $this->host = $host;
+        $this->statusCode = 200;
+        $domainChecks = [
+            'domain_id' => $this->id,
+            'status_code' => $this->statusCode,
+            'created_at' => now(),
+            'updated_at' => now()
+        ];
+        \DB::table('domain_checks')->insert($domainChecks);
     }
 
     public function testStore()
@@ -52,6 +58,7 @@ class DomainTest extends TestCase
         $response = $this->get(route('domains.show', $this->id));
         $response->assertOk();
         $response->assertSee($this->host);
+        $response->assertSee($this->statusCode);
     }
 
     public function testIndex()
@@ -59,5 +66,6 @@ class DomainTest extends TestCase
         $response = $this->get(route('domains.index'));
         $response->assertOk();
         $response->assertSee($this->host);
+        $response->assertSee($this->statusCode);
     }
 }
