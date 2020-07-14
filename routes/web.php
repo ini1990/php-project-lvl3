@@ -71,12 +71,12 @@ Route::post('/domains/{id}/checks', function ($id) {
     try {
         $domain = DB::table('domains')->find($id);
         $response = Http::get($domain->name);
-        $body = $response->body();
-        $status = $response->status();
     } catch (\Exception $e) {
         flash($e->getMessage())->error();
         return redirect()->route('domains.show', $id);
     }
+    $body = $response->body();
+    $status = $response->status();
     $document = new Document($body);
     preg_match('/<h1[^>]*>\s*(.*?)\s*<\/h1>/i', $document, $result);
     $domainChecks = [
@@ -91,6 +91,6 @@ Route::post('/domains/{id}/checks', function ($id) {
 
     DB::table('domain_checks')->insert($domainChecks);
     DB::table('domains')->where('id', $id)->update(['updated_at' => $domainChecks['created_at']]);
-    flash(" Website has been checked!")->success();
+    flash("Website has been checked!")->success();
     return redirect()->route('domains.show', $id);
 })->name('domains.checks.store');
