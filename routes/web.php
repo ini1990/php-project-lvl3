@@ -71,18 +71,20 @@ Route::post('/domains/{id}/checks', function ($id) {
     try {
         $domain = DB::table('domains')->find($id);
         $response = Http::get($domain->name);
+        $body = $response->body();
+        $status = $response->status();
     } catch (\Exception $e) {
         flash($e->getMessage())->error();
         return redirect()->route('domains.show', $id);
     }
-    $document = new Document($response->body());
+    $document = new Document($body);
     preg_match('/<h1[^>]*>\s*(.*?)\s*<\/h1>/i', $document, $result);
     $domainChecks = [
         'domain_id' => $id,
         'keywords' => optional($document->first('meta[name=keywords]'))->content,
         'description' => optional($document->first('meta[name=description]'))->content,
         'h1' => optional($result)[1],
-        'status_code' => $response->status(),
+        'status_code' => $status,
         'created_at' => now(),
         'updated_at' => now()
     ];
