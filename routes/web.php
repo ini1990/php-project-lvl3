@@ -69,7 +69,8 @@ Route::get('/domains/{id}', function ($id) {
 
 Route::post('/domains/{id}/checks', function ($id) {
     try {
-        $response = Http::get(DB::table('domains')->find($id)->name);
+        $domain = DB::table('domains')->find($id);
+        $response = Http::get($domain->name);
     } catch (\Exception $e) {
         flash($e->getMessage())->error();
         return redirect()->route('domains.show', $id);
